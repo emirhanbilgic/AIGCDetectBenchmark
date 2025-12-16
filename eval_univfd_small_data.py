@@ -178,7 +178,7 @@ def _eval_pair(model, opt, real_paths: Sequence[str], fake_paths: Sequence[str],
 def _load_univfd(model_path: str, opt):
     model = get_model(opt)
 
-    ckpt = torch.load(model_path, map_location="cpu")
+    ckpt = torch.load(model_path, map_location="cpu", weights_only=False)
 
     # UnivFD checkpoints in this repo are typically just the fc state_dict.
     state_dict = ckpt
