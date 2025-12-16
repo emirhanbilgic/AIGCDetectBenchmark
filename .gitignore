@@ -5,8 +5,8 @@ weights/**/*.pkl
 
 # Data files
 small_data/
+small_data/**
 data/
-/Users/emirhan/Desktop/AIGCDetectBenchmark/small_data
 
 # Python
 __pycache__/
