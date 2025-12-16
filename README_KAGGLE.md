@@ -61,7 +61,12 @@ small_data/
 ### Example Complete Kaggle Notebook Code
 
 ```python
-# Install dependencies
+# 🚨 CRITICAL: Fix numpy/sklearn compatibility BEFORE ANYTHING ELSE!
+# This must be the FIRST cell you run, or you'll get import errors!
+!pip uninstall -y numpy scikit-learn
+!pip install numpy==1.23.5 scikit-learn==1.2.2
+
+# Now install dependencies
 !pip install -r requirements.txt
 !pip install ftfy regex
 

@@ -12,6 +12,10 @@ This script runs two binary evaluations:
   2) real_images (label=0) vs fake_semi-truths (label=1)
 
 "Harder to detect" is reported as the fake set with **lower ROC-AUC** (tie-break: lower AP).
+
+IMPORTANT: If you get numpy/sklearn compatibility errors, run this FIRST in your environment:
+    pip uninstall -y numpy scikit-learn
+    pip install numpy==1.23.5 scikit-learn==1.2.2
 """
 
 from __future__ import annotations
@@ -24,11 +28,20 @@ from typing import Iterable, List, Sequence, Tuple
 import numpy as np
 import torch
 from PIL import Image, ImageFile
-from sklearn.metrics import (
-    accuracy_score,
-    average_precision_score,
-    roc_auc_score,
-)
+
+# Import sklearn metrics (may fail if numpy/sklearn versions incompatible)
+try:
+    from sklearn.metrics import (
+        accuracy_score,
+        average_precision_score,
+        roc_auc_score,
+    )
+except ImportError as e:
+    print("❌ sklearn import failed. This is likely due to numpy/sklearn version incompatibility.")
+    print("🔧 Run this FIRST in your environment:")
+    print("   pip uninstall -y numpy scikit-learn")
+    print("   pip install numpy==1.23.5 scikit-learn==1.2.2")
+    raise e
 from torch.utils.data import DataLoader, Dataset
 
 from data.datasets import custom_augment, process_img
