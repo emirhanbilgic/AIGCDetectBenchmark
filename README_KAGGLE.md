@@ -28,17 +28,21 @@ This repository contains code for evaluating AI-generated image detection method
 
 Since the weights are hosted on Baidu Pan, you'll need to download them manually and upload to Kaggle, or use a direct download method:
 
-#### Option A: Upload weights to Kaggle dataset
-1. Download UnivFD weights from: https://pan.baidu.com/s/1dZz7suD-X5h54wCC9SyGBA?pwd=l30u
-2. Create a Kaggle dataset with the weights
-3. Mount the dataset in your notebook
-
-#### Option B: Download directly (if accessible)
+#### Recommended: Upload weights as Kaggle dataset
+1. Download UnivFD weights locally from: https://pan.baidu.com/s/1dZz7suD-X5h54wCC9SyGBA?pwd=l30u
+   - You may need a VPN if accessing from certain regions
+2. Create a Kaggle dataset named `univfd-weights` containing the weight file
+3. Mount the dataset in your notebook:
 ```python
-# Note: Baidu Pan links may not work directly in Kaggle
-# You'll likely need to upload the weights as a dataset
 !mkdir -p weights/classifier
-# Upload UnivFD.pth to weights/classifier/ manually
+!cp /kaggle/input/univfd-weights/*.pth weights/classifier/
+```
+
+#### Alternative: Direct download (often fails)
+```python
+# This usually fails due to Baidu Pan authentication requirements
+!mkdir -p weights/classifier
+!wget -O weights/classifier/UnivFD.pth "https://pan.baidu.com/s/1dZz7suD-X5h54wCC9SyGBA?pwd=l30u"
 ```
 
 ### 5. Prepare Your Data
@@ -124,6 +128,13 @@ And determine which fake image set is harder to detect based on lower ROC-AUC sc
    - This is a PyTorch version compatibility issue that has been fixed
    - Make sure you have the latest version of `eval_univfd_small_data.py`
    - The script now uses `weights_only=False` for checkpoint loading
+
+9. **_pickle.UnpicklingError: invalid load key, '<'**:
+   - This means the downloaded file is not a valid PyTorch checkpoint
+   - The Baidu Pan download likely failed and returned an HTML login page instead
+   - **Solution**: Download the weights locally and upload as a Kaggle dataset
+   - Create a dataset named `univfd-weights` with the `UnivFD.pth` file
+   - Use: `!cp /kaggle/input/univfd-weights/UnivFD.pth weights/classifier/`
 
 ## Citation
 
