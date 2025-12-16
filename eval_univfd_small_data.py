@@ -211,7 +211,7 @@ def main():
     ap.add_argument(
         "--small_data_root",
         type=str,
-        default="/Users/emirhan/Desktop/AIGCDetectBenchmark/small_data",
+        default="small_data",
         help="Path to the small_data folder.",
     )
     ap.add_argument("--real_dir", type=str, default="real_images")
@@ -246,13 +246,23 @@ def main():
     if not os.path.isfile(args.model_path):
         raise FileNotFoundError(f"Missing model checkpoint: {args.model_path}")
 
-    # Build a TestOptions object so preprocessing matches the repo.
-    opt = TestOptions().parse(print_options=False)
+    # Build a TestOptions-like object so preprocessing matches the repo.
+    class Opt:
+        pass
+    opt = Opt()
     opt.detect_method = "UnivFD"
     opt.model_path = args.model_path
     opt.noise_type = args.noise_type
     opt.no_crop = bool(args.no_crop)
     opt.no_resize = bool(args.no_resize)
+    opt.batch_size = args.batch_size
+    # Set default preprocessing options
+    opt.rz_interp = ["bilinear"]
+    opt.blur_sig = [1.0]
+    opt.jpg_method = ["pil"]
+    opt.jpg_qual = [95]
+    opt.loadSize = 256
+    opt.CropSize = 224
 
     if args.device is None:
         opt.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
