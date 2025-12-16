@@ -136,6 +136,65 @@ And determine which fake image set is harder to detect based on lower ROC-AUC sc
    - Create a dataset named `univfd-weights` with the `UnivFD.pth` file
    - Use: `!cp /kaggle/input/univfd-weights/UnivFD.pth weights/classifier/`
 
+## Alternative Solutions (If Baidu Pan Fails)
+
+Since Baidu Pan downloads often fail, here are working alternatives:
+
+### **Option 1: Use Different Detection Methods**
+The benchmark supports multiple methods with easier-to-access weights:
+
+```python
+# Try CNNSpot instead (ResNet-based detector)
+!python eval_all.py \
+  --model_path ./weights/classifier/CNNSpot.pth \
+  --detect_method CNNSpot \
+  --dataroot /path/to/your/data
+
+# Or try other methods if weights are available
+```
+
+### **Option 2: Find UnivFD Weights Elsewhere**
+Search for "UnivFD" or "CLIP AIGC detection" on:
+- **Hugging Face**: https://huggingface.co/models
+- **ModelScope**: https://modelscope.cn/models
+- **Civitai**: https://civitai.com/
+- **Academic sources**: Check the UnivFD paper's supplementary materials
+
+### **Option 3: Train Your Own Model**
+Use the training scripts to train UnivFD on your data:
+
+```python
+# Train UnivFD classifier
+!python train.py \
+  --name univfd_training \
+  --dataroot /path/to/training/data \
+  --detect_method UnivFD \
+  --fix_backbone \
+  --batch_size 32 \
+  --lr 0.001
+```
+
+### **Option 4: Use CLIP Backbone Only**
+Since UnivFD uses CLIP ViT-L/14, you can:
+
+1. **Load pre-trained CLIP** from Hugging Face
+2. **Add a classification head** and train it on your dataset
+3. **Skip the complex UnivFD-specific parts**
+
+```python
+import torch
+from transformers import CLIPModel, CLIPProcessor
+
+# Load CLIP
+model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14")
+processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
+
+# Add classification head
+model.classifier = torch.nn.Linear(768, 1)  # Binary classification
+
+# Fine-tune on your dataset...
+```
+
 ## Citation
 
 If you use this code, please cite the original AIGC Detection Benchmark paper.
