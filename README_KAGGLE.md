@@ -110,6 +110,11 @@ And determine which fake image set is harder to detect based on lower ROC-AUC sc
 4. **Memory issues**: Use GPU runtime and reduce batch size if needed
 5. **Weights access**: Baidu Pan links may require VPN access from some regions
 
+6. **Argument parsing error** ("unrecognized arguments: --small_data_root"):
+   - Make sure you're running the correct script: `eval_univfd_small_data.py`
+   - The script uses custom arguments, not the standard eval_all.py arguments
+   - If you get TestOptions arguments in the error, the wrong script is running
+
 ## Citation
 
 If you use this code, please cite the original AIGC Detection Benchmark paper.
