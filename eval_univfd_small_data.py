@@ -250,6 +250,7 @@ def main():
         pass
     opt = Opt()
     opt.detect_method = "UnivFD"
+    opt.isTrain = False  # For evaluation/testing
     opt.model_path = args.model_path
     opt.noise_type = args.noise_type
     opt.no_crop = bool(args.no_crop)
