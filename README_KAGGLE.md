@@ -121,7 +121,12 @@ And determine which fake image set is harder to detect based on lower ROC-AUC sc
    - Make sure you have the latest version of `eval_univfd_small_data.py`
    - The script needs `isTrain = False` for evaluation mode
 
-8. **_pickle.UnpicklingError: Weights only load failed** (PyTorch 2.6):
+8. **AttributeError: 'Opt' object has no attribute 'isVal'**:
+   - This is a bug in the evaluation script that has been fixed
+   - Make sure you have the latest version of `eval_univfd_small_data.py`
+   - The script needs `isVal = False` for evaluation mode
+
+9. **_pickle.UnpicklingError: Weights only load failed** (PyTorch 2.6):
    - This is a PyTorch version compatibility issue that has been fixed
    - Make sure you have the latest version of `eval_univfd_small_data.py`
    - The script now uses `weights_only=False` for checkpoint loading
