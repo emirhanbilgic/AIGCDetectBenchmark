@@ -32,7 +32,6 @@ from sklearn.metrics import (
 from torch.utils.data import DataLoader, Dataset
 
 from data.datasets import custom_augment, process_img
-from options import TestOptions
 from util import get_model
 
 
