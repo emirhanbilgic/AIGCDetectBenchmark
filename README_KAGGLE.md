@@ -71,31 +71,54 @@ small_data/
   --small_data_root /path/to/small_data
 ```
 
-### Example Complete Kaggle Notebook Code
+### Complete Working Kaggle Notebook Code
 
 ```python
+# Fix numpy/sklearn compatibility (CRITICAL!)
+!pip uninstall -y numpy scikit-learn
+!pip install numpy==1.23.5 scikit-learn==1.2.2
+
 # Install dependencies
 !pip install -r requirements.txt
-!pip install ftfy regex
+!pip install ftfy regex tqdm
 
-# Clone repo
+# Clone repository
 !git clone https://github.com/emirhanbilgic/AIGCDetectBenchmark.git
 %cd AIGCDetectBenchmark
 
-# Create small_data directory structure
+# Create directories
+!mkdir -p weights/classifier
 !mkdir -p small_data/fake_ours small_data/fake_semi-truths small_data/real_images
 
-# Upload your data files to these directories
-# (You'll need to manually upload files or mount a dataset)
+# Download UnivFD weights (Method 1: Direct download)
+print("Downloading UnivFD weights...")
+try:
+    !wget -O weights/classifier/UnivFD.pth "https://pan.baidu.com/s/1dZz7suD-X5h54wCC9SyGBA?pwd=l30u" --timeout=30
+    print("✅ Weights downloaded successfully!")
+except:
+    print("❌ Direct download failed - using Kaggle dataset method...")
+    !cp /kaggle/input/univfd-weights/UnivFD.pth weights/classifier/
 
-# Create weights directory and upload UnivFD.pth
-!mkdir -p weights/classifier
-# Upload UnivFD.pth here
+# Copy your data from Kaggle dataset
+# Replace 'your-dataset-name' with your actual dataset name
+try:
+    !cp /kaggle/input/your-dataset-name/small_data/* small_data/ -r
+    print("✅ Data copied successfully!")
+except:
+    print("❌ Data copy failed. Make sure you uploaded small_data as a Kaggle dataset")
+
+# Verify files
+print("\n📁 Checking downloaded files:")
+!ls -la weights/classifier/
+!ls -la small_data/
 
 # Run evaluation
+print("\n🚀 Running UnivFD evaluation...")
 !python eval_univfd_small_data.py \
   --model_path weights/classifier/UnivFD.pth \
   --small_data_root small_data
+
+print("\n✅ Evaluation complete!")
 ```
 
 ## Expected Output
@@ -108,10 +131,28 @@ And determine which fake image set is harder to detect based on lower ROC-AUC sc
 
 ## Troubleshooting
 
-1. **Missing dependencies**: Make sure all packages from `requirements.txt` are installed
-2. **CLIP model download**: The script will automatically download CLIP ViT-L/14 weights to `~/.cache/clip/`
-3. **Memory issues**: Use GPU runtime and reduce batch size if needed
-4. **Weights access**: Baidu Pan links may require VPN access from some regions
+1. **Numpy/Sklearn compatibility error** (ValueError: numpy.dtype size changed):
+   ```python
+   # Run this FIRST before other installations:
+   !pip uninstall -y numpy scikit-learn
+   !pip install numpy==1.23.5 scikit-learn==1.2.2
+   ```
+
+2. **Missing dependencies**: Make sure all packages from `requirements.txt` are installed
+
+3. **CLIP model download**: The script will automatically download CLIP ViT-L/14 weights to `~/.cache/clip/`
+
+4. **Memory issues**: Use GPU runtime and reduce batch size if needed
+
+5. **Weights access**: Baidu Pan links may require VPN access from some regions
+
+6. **Data copy issues**:
+   ```python
+   # Check your dataset paths:
+   !ls /kaggle/input/
+   # Then copy with correct path:
+   !cp /kaggle/input/your-actual-dataset-name/* small_data/ -r
+   ```
 
 ## Complete Kaggle Notebook Example
 
