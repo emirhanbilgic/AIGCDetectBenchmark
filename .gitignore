@@ -1,7 +1,7 @@
-# Weights and large files
-weights/**/*.pth
-weights/**/*.pt
-weights/**/*.pkl
+# Large data files (but keep model weights)
+# weights/**/*.pth  # Commented out to include UnivFD weights in repo
+# weights/**/*.pt
+# weights/**/*.pkl
 
 # Data files
 small_data/

@@ -26,23 +26,16 @@ This repository contains code for evaluating AI-generated image detection method
 
 ### 4. Download UnivFD Weights
 
-Since the weights are hosted on Baidu Pan, you'll need to download them manually and upload to Kaggle, or use a direct download method:
+**✅ Weights are now included in the repository! No manual download needed.**
 
-#### Recommended: Upload weights as Kaggle dataset
-1. Download UnivFD weights locally from: https://pan.baidu.com/s/1dZz7suD-X5h54wCC9SyGBA?pwd=l30u
-   - You may need a VPN if accessing from certain regions
-2. Create a Kaggle dataset named `univfd-weights` containing the weight file
-3. Mount the dataset in your notebook:
-```python
-!mkdir -p weights/classifier
-!cp /kaggle/input/univfd-weights/*.pth weights/classifier/
-```
+The UnivFD weights (`UnivFD.pth`) are automatically available when you clone the repository. They were downloaded from the official [UniversalFakeDetect repository](https://github.com/WisconsinAIVision/UniversalFakeDetect).
 
-#### Alternative: Direct download (often fails)
+#### Automatic Setup
 ```python
-# This usually fails due to Baidu Pan authentication requirements
-!mkdir -p weights/classifier
-!wget -O weights/classifier/UnivFD.pth "https://pan.baidu.com/s/1dZz7suD-X5h54wCC9SyGBA?pwd=l30u"
+# Weights are already in the repository at weights/classifier/UnivFD.pth
+# No additional download steps needed!
+!ls weights/classifier/
+# Should show: UnivFD.pth
 ```
 
 ### 5. Prepare Your Data
@@ -79,12 +72,11 @@ small_data/
 # Create small_data directory structure
 !mkdir -p small_data/fake_ours small_data/fake_semi-truths small_data/real_images
 
+# Verify weights are available (already included in repo)
+!ls -la weights/classifier/
+
 # Upload your data files to these directories
 # (You'll need to manually upload files or mount a dataset)
-
-# Create weights directory and upload UnivFD.pth
-!mkdir -p weights/classifier
-# Upload UnivFD.pth here
 
 # Run evaluation
 !python eval_univfd_small_data.py \
@@ -130,70 +122,9 @@ And determine which fake image set is harder to detect based on lower ROC-AUC sc
    - The script now uses `weights_only=False` for checkpoint loading
 
 9. **_pickle.UnpicklingError: invalid load key, '<'**:
-   - This means the downloaded file is not a valid PyTorch checkpoint
-   - The Baidu Pan download likely failed and returned an HTML login page instead
-   - **Solution**: Download the weights locally and upload as a Kaggle dataset
-   - Create a dataset named `univfd-weights` with the `UnivFD.pth` file
-   - Use: `!cp /kaggle/input/univfd-weights/UnivFD.pth weights/classifier/`
-
-## Alternative Solutions (If Baidu Pan Fails)
-
-Since Baidu Pan downloads often fail, here are working alternatives:
-
-### **Option 1: Use Different Detection Methods**
-The benchmark supports multiple methods with easier-to-access weights:
-
-```python
-# Try CNNSpot instead (ResNet-based detector)
-!python eval_all.py \
-  --model_path ./weights/classifier/CNNSpot.pth \
-  --detect_method CNNSpot \
-  --dataroot /path/to/your/data
-
-# Or try other methods if weights are available
-```
-
-### **Option 2: Find UnivFD Weights Elsewhere**
-Search for "UnivFD" or "CLIP AIGC detection" on:
-- **Hugging Face**: https://huggingface.co/models
-- **ModelScope**: https://modelscope.cn/models
-- **Civitai**: https://civitai.com/
-- **Academic sources**: Check the UnivFD paper's supplementary materials
-
-### **Option 3: Train Your Own Model**
-Use the training scripts to train UnivFD on your data:
-
-```python
-# Train UnivFD classifier
-!python train.py \
-  --name univfd_training \
-  --dataroot /path/to/training/data \
-  --detect_method UnivFD \
-  --fix_backbone \
-  --batch_size 32 \
-  --lr 0.001
-```
-
-### **Option 4: Use CLIP Backbone Only**
-Since UnivFD uses CLIP ViT-L/14, you can:
-
-1. **Load pre-trained CLIP** from Hugging Face
-2. **Add a classification head** and train it on your dataset
-3. **Skip the complex UnivFD-specific parts**
-
-```python
-import torch
-from transformers import CLIPModel, CLIPProcessor
-
-# Load CLIP
-model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14")
-processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
-
-# Add classification head
-model.classifier = torch.nn.Linear(768, 1)  # Binary classification
-
-# Fine-tune on your dataset...
-```
+   - This error should no longer occur since weights are now included in the repository
+   - If you encounter this, ensure you're using the latest version of the repository
+   - The weights are already validated and properly formatted
 
 ## Citation
 
