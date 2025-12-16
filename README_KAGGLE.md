@@ -115,6 +115,11 @@ And determine which fake image set is harder to detect based on lower ROC-AUC sc
    - The script uses custom arguments, not the standard eval_all.py arguments
    - If you get TestOptions arguments in the error, the wrong script is running
 
+7. **AttributeError: 'Opt' object has no attribute 'isTrain'**:
+   - This is a bug in the evaluation script that has been fixed
+   - Make sure you have the latest version of `eval_univfd_small_data.py`
+   - The script needs `isTrain = False` for evaluation mode
+
 ## Citation
 
 If you use this code, please cite the original AIGC Detection Benchmark paper.
