@@ -43,6 +43,7 @@ from typing import Iterable, List, Sequence, Tuple
 import numpy as np
 import torch
 import torch.nn as nn
+import torchvision.transforms as transforms
 from PIL import Image, ImageFile
 from torch.utils.data import DataLoader, Dataset
 
@@ -179,12 +180,13 @@ def _eval_pair(model, real_paths: List[str], fake_paths: List[str], batch_size: 
     all_items = real_items + fake_items
 
     # Simple transform for CrossEfficientViT
-    transform = torch.nn.Sequential(
-        torch.nn.functional.interpolate(size=(224, 224), mode='bilinear', align_corners=False),
-        torch.nn.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    )
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
 
-    dataset = _BinaryFolderDataset(all_items, transform=None)  # We'll apply transform in collate
+    dataset = _BinaryFolderDataset(all_items, transform=transform)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=0)
 
     device = next(model.parameters()).device
@@ -192,8 +194,6 @@ def _eval_pair(model, real_paths: List[str], fake_paths: List[str], batch_size: 
 
     with torch.no_grad():
         for batch_images, batch_labels in dataloader:
-            # Manual preprocessing
-            batch_images = torch.stack([transform(img.unsqueeze(0)).squeeze(0) for img in batch_images])
             batch_images = batch_images.to(device)
 
             outputs = model(batch_images)
