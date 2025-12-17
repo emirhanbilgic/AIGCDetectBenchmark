@@ -101,10 +101,10 @@ The script automatically finds all images in all subfolders.
   --small_data_root test_data
 
 # Alternative: CrossEfficientViT evaluation (experimental)
-# First download weights from the original repository:
-# https://github.com/davide-coccomini/Combining-EfficientNet-and-Vision-Transformers-for-Video-Deepfake-Detection
-# wget http://datino.isti.cnr.it/efficientvit_deepfake/cross_efficient_vit.pth
-# Then run:
+# Download weights from: https://github.com/davide-coccomini/Combining-EfficientNet-and-Vision-Transformers-for-Video-Deepfake-Detection
+# Look for Google Drive links in README or Issues
+# Upload to Kaggle as dataset, then use:
+# !cp /kaggle/input/cross-efficient/pytorch/default/1/cross_efficient_vit.pth cross_efficient_vit.pth
 # !python eval_crossefficientvit_small_data.py \
 #   --model_path cross_efficient_vit.pth \
 #   --small_data_root test_data
