@@ -56,3 +56,4 @@ results/
 # Kaggle specific
 kaggle/working/
 kaggle/input/
+weights/classifier/cross_efficient_vit.pth
