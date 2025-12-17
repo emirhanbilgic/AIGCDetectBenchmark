@@ -24,11 +24,23 @@ This repository contains code for evaluating AI-generated image detection method
 !pip install ftfy regex
 ```
 
-### 4. Download UnivFD Weights
+### 4. Download Model Weights
 
-**✅ Weights are now included in the repository! No manual download needed.**
+**UnivFD weights are included in the repository, but other methods need additional downloads.**
 
-The UnivFD weights (`UnivFD.pth`) are automatically available when you clone the repository. They were downloaded from the official [UniversalFakeDetect repository](https://github.com/WisconsinAIVision/UniversalFakeDetect).
+#### UnivFD (Included ✅)
+The UnivFD weights (`UnivFD.pth`) are automatically available when you clone the repository.
+
+#### DIRE Method
+DIRE requires two sets of weights:
+1. **Classifier weights**: Download CNNSpot.pth (trained on DIRE-preprocessed images) from the Baidu Pan link
+2. **Diffusion model**: Download lsun_bedroom.pt from the same location
+
+```python
+# For DIRE evaluation, you'll need to upload these weights:
+# - weights/classifier/CNNSpot.pth (classifier)
+# - weights/preprocessing/lsun_bedroom.pt (diffusion model)
+```
 
 #### Automatic Setup
 ```python
@@ -95,10 +107,18 @@ The script automatically finds all images in all subfolders.
 # Replace 'your-dataset-name' with your actual dataset name containing test_data/
 !cp /kaggle/input/your-dataset-name/test_data/* test_data/ -r 2>/dev/null || echo "Upload test_data as Kaggle dataset first"
 
-# Run evaluation
+# Run evaluation (choose your method)
+
+# For UnivFD:
 !python eval_univfd_small_data.py \
   --model_path weights/classifier/UnivFD.pth \
   --small_data_root test_data
+
+# For DIRE (requires additional weights):
+# !python eval_dire_small_data.py \
+#   --model_path weights/classifier/CNNSpot.pth \
+#   --dire_model_path weights/preprocessing/lsun_bedroom.pt \
+#   --small_data_root test_data
 ```
 
 ## Expected Output
