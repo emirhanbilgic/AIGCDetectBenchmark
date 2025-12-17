@@ -288,10 +288,9 @@ def main():
     auc_ours = res_ours['auc']
     auc_semi = res_semi['auc']
 
-    print("
-🎯 COMPARISON:")
-    print(".3f")
-    print(".3f")
+    print("\n🎯 COMPARISON:")
+    print(f"fake_ours AUC: {auc_ours:.3f}")
+    print(f"fake_semi-truths AUC: {auc_semi:.3f}")
 
     if auc_ours < auc_semi:
         print(f"[verdict] Harder to detect (lower AUC): fake_ours")
