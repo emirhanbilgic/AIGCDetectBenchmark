@@ -40,14 +40,28 @@ The UnivFD weights (`UnivFD.pth`) are automatically available when you clone the
 
 ### 5. Prepare Your Data
 
-Upload your `small_data` folder to Kaggle as a dataset or create it in the notebook:
+Upload your `test_data` folder to Kaggle as a dataset. The script handles nested subfolders:
 
 ```
-small_data/
-├── fake_ours/     # 100 PNG images
-├── fake_semi-truths/  # 100 PNG images
-└── real_images/   # ~100 JPG images
+test_data/
+├── fake_ours/            # Your fake images (with subfolders)
+│   ├── celebahq_openjourney_ours/
+│   ├── cityscapes_kandindsky_ours/
+│   ├── openimages_stablediffusion_v4_ours/
+│   └── sun_rgbd_kandinsky_ours/
+├── fake_semi-truths/     # Semi-truths fake images (with subfolders)
+│   ├── celebahq_openjourney/
+│   ├── cityscapes_kandindsky/
+│   ├── OpenImages_StableDiffusion_v4/
+│   └── sun_rgbd_kandinsky/
+└── real_images/          # Real images (with subfolders)
+    ├── celebahq/
+    ├── cityscapes_real/
+    ├── openimages_real/
+    └── sun_rgbd_real/
 ```
+
+The script automatically finds all images in all subfolders.
 
 ### 6. Run the Evaluation
 
@@ -74,19 +88,17 @@ small_data/
 !git clone https://github.com/emirhanbilgic/AIGCDetectBenchmark.git
 %cd AIGCDetectBenchmark
 
-# Create small_data directory structure
-!mkdir -p small_data/fake_ours small_data/fake_semi-truths small_data/real_images
-
 # Verify weights are available (already included in repo)
 !ls -la weights/classifier/
 
-# Upload your data files to these directories
-# (You'll need to manually upload files or mount a dataset)
+# Copy your test_data from Kaggle dataset
+# Replace 'your-dataset-name' with your actual dataset name containing test_data/
+!cp /kaggle/input/your-dataset-name/test_data/* test_data/ -r 2>/dev/null || echo "Upload test_data as Kaggle dataset first"
 
 # Run evaluation
 !python eval_univfd_small_data.py \
   --model_path weights/classifier/UnivFD.pth \
-  --small_data_root small_data
+  --small_data_root test_data
 ```
 
 ## Expected Output

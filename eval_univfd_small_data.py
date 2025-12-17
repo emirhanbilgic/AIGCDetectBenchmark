@@ -3,9 +3,20 @@ Evaluate UnivFD on a custom 3-folder setup and decide which fake set is harder t
 
 Expected directory layout (default):
   small_data/
-    real_images/
-    fake_ours/
-    fake_semi-truths/
+    real_images/          # Real images (may contain subfolders)
+      ├── celebahq/
+      ├── cityscapes_real/
+      └── ...
+    fake_ours/            # Your fake images (may contain subfolders)
+      ├── celebahq_openjourney_ours/
+      ├── cityscapes_kandindsky_ours/
+      └── ...
+    fake_semi-truths/     # Semi-truths fake images (may contain subfolders)
+      ├── celebahq_openjourney/
+      ├── cityscapes_kandindsky/
+      └── ...
+
+The script recursively searches all subfolders for images (.jpg, .jpeg, .png, etc.).
 
 This script runs two binary evaluations:
   1) real_images (label=0) vs fake_ours (label=1)
