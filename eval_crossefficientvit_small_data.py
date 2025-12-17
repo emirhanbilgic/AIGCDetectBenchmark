@@ -94,72 +94,160 @@ class _BinaryFolderDataset(Dataset):
         return image, label
 
 
-# Simplified CrossEfficientViT model for single image classification
-# Adapted from the original video model
+# Improved CrossEfficientViT model for single image classification
+# Better adapted from the original video model architecture
 class CrossEfficientViT(nn.Module):
-    def __init__(self, num_classes=2):
+    def __init__(self, num_classes=2, embed_dim=768, depth=12, num_heads=12):
         super(CrossEfficientViT, self).__init__()
 
-        # Simple CNN backbone for single images
+        # CNN backbone (EfficientNet-style)
         self.features = nn.Sequential(
+            # Stem
             nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
 
-            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm2d(128),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
+            # EfficientNet-style blocks
+            self._make_layer(64, 128, 2),
+            self._make_layer(128, 256, 2),
+            self._make_layer(256, 512, 2),
 
-            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm2d(256),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-
-            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True),
             nn.AdaptiveAvgPool2d((1, 1))
         )
 
-        self.classifier = nn.Sequential(
-            nn.Dropout(0.5),
-            nn.Linear(512, 256),
-            nn.ReLU(inplace=True),
-            nn.Dropout(0.5),
-            nn.Linear(256, num_classes)
-        )
+        # Vision Transformer components
+        self.patch_embed = nn.Conv2d(512, embed_dim, kernel_size=1)
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
+        self.pos_embed = nn.Parameter(torch.zeros(1, 1 + 1, embed_dim))  # 1 patch + 1 cls token
+
+        # Transformer blocks
+        self.blocks = nn.ModuleList([
+            nn.TransformerEncoderLayer(
+                d_model=embed_dim,
+                nhead=num_heads,
+                dim_feedforward=embed_dim * 4,
+                dropout=0.1,
+                batch_first=True
+            ) for _ in range(depth)
+        ])
+
+        self.norm = nn.LayerNorm(embed_dim)
+        self.classifier = nn.Linear(embed_dim, num_classes)
+
+        # Initialize weights
+        self.apply(self._init_weights)
+
+    def _make_layer(self, in_channels, out_channels, blocks):
+        layers = []
+        for _ in range(blocks):
+            layers.extend([
+                nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1),
+                nn.BatchNorm2d(out_channels),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1),
+                nn.BatchNorm2d(out_channels),
+                nn.ReLU(inplace=True),
+                nn.MaxPool2d(kernel_size=2, stride=2)
+            ])
+            in_channels = out_channels
+        return nn.Sequential(*layers)
+
+    def _init_weights(self, m):
+        if isinstance(m, nn.Linear):
+            nn.init.trunc_normal_(m.weight, std=.02)
+            if isinstance(m, nn.Linear) and m.bias is not None:
+                nn.init.constant_(m.bias, 0)
+        elif isinstance(m, nn.LayerNorm):
+            nn.init.constant_(m.bias, 0)
+            nn.init.constant_(m.weight, 1.0)
 
     def forward(self, x):
-        x = self.features(x)
-        x = torch.flatten(x, 1)
-        x = self.classifier(x)
+        # CNN feature extraction
+        x = self.features(x)  # [B, 512, 1, 1]
+        x = torch.flatten(x, 2).transpose(1, 2)  # [B, 1, 512]
+
+        # Patch embedding
+        x = self.patch_embed(x)  # [B, 1, embed_dim]
+
+        # Add cls token
+        cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)  # [B, 1, embed_dim]
+        x = torch.cat((cls_tokens, x), dim=1)  # [B, 2, embed_dim]
+
+        # Add positional embedding
+        x = x + self.pos_embed[:, :x.size(1)]
+
+        # Apply transformer blocks
+        for block in self.blocks:
+            x = block(x)
+
+        # Classification from cls token
+        x = self.norm(x)
+        cls_output = x[:, 0]  # Take cls token
+        x = self.classifier(cls_output)
         return x
 
 
 def _load_crossefficientvit(model_path: str, device: str = "cuda"):
     """Load CrossEfficientViT model adapted for single image classification."""
-    model = CrossEfficientViT(num_classes=2)
+    try:
+        model = CrossEfficientViT(num_classes=2)
+        print("✅ Created CrossEfficientViT model")
+    except Exception as e:
+        print(f"⚠️ Could not create CrossEfficientViT model: {e}")
+        print("Falling back to simple CNN model")
+        # Fallback to simpler architecture
+        model = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.AdaptiveAvgPool2d((1, 1)),
+            nn.Flatten(),
+            nn.Linear(64, 2)
+        )
 
     # Try to load pretrained weights if available
     if os.path.exists(model_path):
+        file_size = os.path.getsize(model_path)
+        print(f"📁 Found weights file: {model_path} ({file_size} bytes)")
         try:
-            # Load with weights_only=False for compatibility
-            state_dict = torch.load(model_path, map_location='cpu', weights_only=False)
+            # First try to load as a regular PyTorch checkpoint
+            checkpoint = torch.load(model_path, map_location='cpu', weights_only=False)
 
-            # Try to adapt the weights - this is a simplified adaptation
-            # The original model was for video frames, we're using it for single images
-            new_state_dict = {}
-            for k, v in state_dict.items():
-                # Adapt layer names if needed
-                if k.startswith('module.'):
-                    k = k[7:]
-                new_state_dict[k] = v
+            # Check if it's a state_dict or full checkpoint
+            if isinstance(checkpoint, dict):
+                # If it has 'state_dict' key, it's a full checkpoint
+                if 'state_dict' in checkpoint:
+                    state_dict = checkpoint['state_dict']
+                # If it has 'model' key
+                elif 'model' in checkpoint:
+                    state_dict = checkpoint['model']
+                else:
+                    # Assume it's already a state_dict
+                    state_dict = checkpoint
 
-            # Try to load what we can
-            model.load_state_dict(new_state_dict, strict=False)
-            print(f"✅ Loaded CrossEfficientViT weights from {model_path} (adapted for single images)")
+                # Adapt layer names - remove 'module.' prefix if present
+                new_state_dict = {}
+                for k, v in state_dict.items():
+                    if k.startswith('module.'):
+                        k = k[7:]
+                    new_state_dict[k] = v
+
+                # Try to load what we can
+                missing_keys, unexpected_keys = model.load_state_dict(new_state_dict, strict=False)
+
+                if len(missing_keys) == 0 and len(unexpected_keys) == 0:
+                    print(f"✅ Successfully loaded all CrossEfficientViT weights from {model_path}")
+                elif len(missing_keys) < len(model.state_dict()):
+                    print(f"✅ Partially loaded CrossEfficientViT weights from {model_path}")
+                    print(f"   Missing keys: {len(missing_keys)}, Unexpected keys: {len(unexpected_keys)}")
+                else:
+                    print(f"⚠️ Could not load pretrained weights: incompatible architecture")
+                    print("Using randomly initialized model")
+            else:
+                print(f"⚠️ Unexpected checkpoint format in {model_path}")
+                print("Using randomly initialized model")
+
         except Exception as e:
             print(f"⚠️ Could not load pretrained weights: {e}")
             print("Using randomly initialized model")
