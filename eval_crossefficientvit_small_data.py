@@ -100,7 +100,7 @@ class CrossEfficientViT(nn.Module):
     def __init__(self, num_classes=2, embed_dim=768, depth=12, num_heads=12):
         super(CrossEfficientViT, self).__init__()
 
-        # CNN backbone (EfficientNet-style)
+        # CNN backbone (EfficientNet-style) - Fixed for 224x224 input
         self.features = nn.Sequential(
             # Stem
             nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3),
@@ -108,16 +108,16 @@ class CrossEfficientViT(nn.Module):
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
 
-            # EfficientNet-style blocks
-            self._make_layer(64, 128, 2),
-            self._make_layer(128, 256, 2),
-            self._make_layer(256, 512, 2),
+            # EfficientNet-style blocks - Reduced blocks to avoid over-downsampling
+            self._make_layer(64, 128, 1),    # 1 block instead of 2
+            self._make_layer(128, 256, 1),   # 1 block instead of 2
+            self._make_layer(256, 512, 1),   # 1 block instead of 2
 
             nn.AdaptiveAvgPool2d((1, 1))
         )
 
         # Vision Transformer components
-        self.patch_embed = nn.Conv2d(512, embed_dim, kernel_size=1)
+        self.patch_embed = nn.Linear(512, embed_dim)  # Project CNN features to embed_dim
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         self.pos_embed = nn.Parameter(torch.zeros(1, 1 + 1, embed_dim))  # 1 patch + 1 cls token
 
@@ -165,10 +165,11 @@ class CrossEfficientViT(nn.Module):
     def forward(self, x):
         # CNN feature extraction
         x = self.features(x)  # [B, 512, 1, 1]
-        x = torch.flatten(x, 2).transpose(1, 2)  # [B, 1, 512]
+        x = torch.flatten(x, 1)  # [B, 512]
 
-        # Patch embedding
-        x = self.patch_embed(x)  # [B, 1, embed_dim]
+        # Patch embedding - project to embed_dim and add sequence dimension
+        x = self.patch_embed(x)  # [B, embed_dim]
+        x = x.unsqueeze(1)  # [B, 1, embed_dim]
 
         # Add cls token
         cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)  # [B, 1, embed_dim]
